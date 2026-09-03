@@ -11,14 +11,13 @@ import requests
 import time
 from datetime import datetime, timedelta
 
-# --- НАСТРОЙКИ (ВСТАВЬ СВОИ ДАННЫЕ) ---
+# НАСТРОЙКИ
 VK_TOKEN = ""
 TG_BOT_TOKEN = ""
 TG_CHAT_ID = ""
 TARGET_CHAT_NAME = ""
 DB_FILE = "data/users.db"
 
-# --- ИНИЦИАЛИЗАЦИЯ БД ---
 def init_db():
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
     conn = sqlite3.connect(DB_FILE)
@@ -40,14 +39,11 @@ def get_user_name(tg_id):
     conn.close()
     return res[0] if res else None
 
-# --- ИНИЦИАЛИЗАЦИЯ КЛИЕНТОВ ---
 vk_session = vk_api.VkApi(token=VK_TOKEN)
 vk = vk_session.get_api()
 upload = VkUpload(vk_session)
 tg_bot = telebot.TeleBot(TG_BOT_TOKEN)
 target_peer_id = None
-
-# --- ФУНКЦИИ ОТПРАВКИ ---
 
 def send_to_vk_final(sender_name, text, attachments=""):
     """Универсальная отправка в ВК"""
@@ -88,7 +84,6 @@ def send_media_to_tg(name, text, attachments, chat_id, is_test=False):
         except Exception as e:
             tg_bot.send_message(chat_id, f"❌ Ошибка вложения: {e}")
 
-# --- ФОНОВЫЙ ПЛАНИРОВЩИК ---
 def scheduler_worker():
     while True:
         try:
@@ -105,8 +100,6 @@ def scheduler_worker():
             conn.close()
         except Exception as e: print(f"БД Ошибка: {e}")
         time.sleep(30)
-
-# --- ОБРАБОТЧИКИ ТЕЛЕГРАМ ---
 
 @tg_bot.message_handler(commands=['help'])
 def handle_help(message):
@@ -199,7 +192,6 @@ def handle_tg_to_vk(message):
         tg_bot.reply_to(message, "✅ В ВК!")
     except Exception as e: tg_bot.reply_to(message, f"❌ Ошибка: {e}")
 
-# --- ВК ЛОГИКА ---
 def vk_listener():
     lp = VkLongPoll(vk_session)
     for event in lp.listen():
@@ -219,7 +211,6 @@ def main():
             break
     if not target_peer_id: sys.exit("Чат не найден")
 
-    # Умный тест
     history = vk.messages.getHistory(peer_id=target_peer_id, count=1)['items'][0]
     u_id = history.get('from_id')
     u_name = "Система"
